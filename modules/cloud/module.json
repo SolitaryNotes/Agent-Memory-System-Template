@@ -1,0 +1,6 @@
+{
+  "name": "cloud",
+  "target_prefix": "cloud",
+  "description": "远程 GPU 实验流水线：上传包构建、云端 Agent 自启动、实时监督仪表盘、返回包核验与归档",
+  "requires": ["research"]
+}

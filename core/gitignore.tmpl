@@ -1,0 +1,33 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ---- 虚拟环境 ----
+venv/
+.venv/
+env/
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ---- 操作系统 ----
+.DS_Store
+Thumbs.db
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- 记忆系统 ----
+# agent_memory/ 必须入库：它是跨会话、跨机器的上下文载体。
+# 本文件刻意【不】忽略它。（注意：不要在这里写 `!agent_memory/` ——
+# git 的 `!` 只在有对应忽略规则时才起作用，孤立的取反是空操作，
+# 只会让人误以为已经保护了它。）
+

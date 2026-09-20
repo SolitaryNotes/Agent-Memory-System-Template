@@ -1,0 +1,16 @@
+{
+  "name": "research",
+  "target_prefix": "",
+  "description": "科研目录规范：experiments/run|plot、results/、figures/、configs/，以及 run.json 实验溯源与背景文档模板",
+  "requires": [],
+  "landed_paths": [
+    "experiments/",
+    "results/",
+    "figures/",
+    "configs/",
+    "run.schema.json",
+    "docs/experiment_protocol.md",
+    "docs/research_background.md",
+    "docs/literature_roadmap.md"
+  ]
+}

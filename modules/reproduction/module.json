@@ -1,0 +1,7 @@
+{
+  "name": "reproduction",
+  "target_prefix": "",
+  "description": "论文复现专项：复现协议、基线对齐清单、偏离记录与种子策略",
+  "requires": ["research"],
+  "landed_paths": ["docs/reproduction_protocol.md", "docs/baseline_alignment.md"]
+}

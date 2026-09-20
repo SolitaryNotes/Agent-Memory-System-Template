@@ -1,0 +1,80 @@
+# {{PROJECT_NAME}}
+
+{{ONE_LINE_DESC}}
+
+**Goal**: {{GOAL}}
+**Current Stage**: {{CURRENT_STAGE}}
+
+> 本文件是**内核（tier-0）**，每个新会话自动加载。它只写**协议**，不写**知识**——
+> 知识在 `agent_memory/` 里按需加载。**保持简短是硬要求**（上限 {{CLAUDE_MAX_LINES}} 行，由 `tools/check_conventions.py` 校验）。
+
+## Boot Sequence
+
+> **停止规则：默认读到第 2 层为止**（第 2 层 = `agent_memory/BOOT.md`，层清单见本节末尾）。
+> 第 2 层没能回答你的问题，才继续往下读。
+>
+> 读完后**先判断这个项目有没有「它自己的东西」，再决定怎么处理路由表**——顺序很重要：
+>
+> **① 有没有属于这个课题的内容？**（实验代码、数据、结果、结论、已定的目标）
+> 判断时**允许**你扫一眼 `docs/`、`results/` 的**有无与命名**（这不算「继续往下读」），但别通读正文。
+> 下面要用到「满篇 `[TODO]`」这个判据——**别去通读，直接数**：
+> `grep -rc '\[TODO' docs/ cloud/` 。计数是允许的，通读才是被禁止的
+> （上一版只写了"别通读"，读者为了拿到判据只能违反它——判据必须可执行）。
+> **脚手架带来的东西一律不算**：`tools/`、各 `_TEMPLATE.md`、骨架代码
+> （`experiments/plot/common.py`、`hooks/session_start.py`、`cloud/verify_integrity.py`、`run.schema.json`）、
+> 以及 `docs/`、`cloud/` 下 `[TODO]` 满篇的空白模板——后者最像内容，但满篇 TODO 就是还没内容。
+> （未安装的模块，其路径不存在是正常的；路由表里指向它的行可直接删掉。）
+>
+> - **没有** → **不要替它编造。** 停下来问用户「这个项目要做什么、当前在推进什么」。
+>   内核里的 Goal / Stage 可能只是初始化占位，**写着字不代表项目已经存在**。
+> - **有** → 进入 ②。
+>
+> **判断不了就按「没有」处理。问一句的代价，远小于编造一套项目身份。**
+>
+> **② 对照路由表**（仅在 ① 判定为「有」时进行）：缺行就补；有 `[TODO]` 行就按实际情况改写。
+
+1. 本文件（自动加载）— 身份、目标、当前阶段
+2. `agent_memory/BOOT.md` — 状态快照 + **任务→文件路由表**（多数任务到这一层就够）
+3. `agent_memory/current_state.md` — 完整手册与索引
+4. `git log --oneline -15` — **事实锚点**。这一层**按需**使用：
+   只在「文档与代码看起来矛盾」时拿它裁决，平常不必读。
+   - 若本项目尚未 `git init`，跳过即可，别把它当成"没有信息"就放弃
+5. `agent_memory/session_logs/` — 最近一次会话记录（**`_TEMPLATE.md` 不是会话记录，跳过它**）
+6. `agent_memory/plans/` — 状态为 `active` 的那份计划（**`_TEMPLATE.md` 不是计划，跳过它**）
+
+## Quick Start
+```bash
+{{BOOT_CMD}}
+{{ENTRY_CMD}}
+```
+
+## 文件放置原则
+新增文件前，先查 `agent_memory/BOOT.md` 的**任务→文件路由表**。
+找不到对应行时，按「同类就近、层级不深于三层」放置，**并在路由表补一行**。
+
+> ⚠️ 前提：**项目已有真实内容**。空脚手架阶段不要为了「补一行」而编造条目（见 ① ）。
+
+{{NAMING_RULES}}
+
+{{STYLE_RULES}}
+
+## 会话结束前
+产出「非显然且值得跨会话复用」的认知时，按 `agent_memory/README.md` 的约定沉淀：
+写一份 session log → 更新 `BOOT.md` 状态快照 → 必要时在 `current_state.md` 建专题文档并登记到索引。
+
+> ⚠️ **前提是本次真的产出了东西。** 只是在空脚手架上做确认、或问几个问题就结束——
+> **不要写 session log**，也**不要**为填满「核心结果」「产物清单」而编内容。
+> **没有产出是合法状态，不是待填的空位。**
+
+<!-- @agents:skip -->
+## Claude Code 专属
+- 全局规则见 `~/.claude/CLAUDE.md`
+- 可选自启动 hook：**装了 `hooks` 模块才有** `hooks/README.md`（`hooks` 是可选模块，
+  **没装就没有这个路径，属正常**）。即便装了，hook 本身也**默认关闭**——启用前先读其开销说明。
+<!-- @agents:endskip -->
+
+## References
+- 扩展状态：`agent_memory/BOOT.md`
+- 完整手册：`agent_memory/current_state.md`
+- 记忆系统约定：`agent_memory/README.md`
+- Git：{{GIT_REMOTE}}（**没有远程仓库就填「无（仅本地）」**——不要为了填满这一项而编一个 URL）

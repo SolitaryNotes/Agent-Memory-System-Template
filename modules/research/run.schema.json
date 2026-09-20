@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:agent-memory-system:run-schema",
+  "title": "run.json — 单次实验运行的溯源记录",
+  "description": "放在该次运行自己的目录下——布局为 results/<实验名>/<格>/<run_id>/（见 `docs/experiment_protocol.md` §6）。目的只有一个：让任何一个结果目录在半年后仍能自证『这是什么配置、什么代码、什么随机种子跑出来的』，而不必依赖文件夹命名或当事人的记忆。这是本系统唯一强制约束的 schema —— 指标 CSV 的列名刻意不做标准化——因为强行约定列名会迫使每个项目做适配层，成本远大于收益；缺的从来不是列名，而是【这次跑的是什么配置】。⚠️ 与检查器的关系：`tools/check_conventions.py` 的 run_json 检查先试扁平的 results/<目录>/run.json，没有再向下探一至两层（本布局深两层），并对探到的每一份 run.json 核对全部 6 个必填字段——两种布局都认，本布局可以直接用。",
+  "type": "object",
+  "required": ["run_id", "started_at", "config", "git_commit", "seed", "note"],
+  "additionalProperties": true,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}-[0-9]{4}-[a-z0-9-]+$",
+      "description": "运行标识，格式 {YYYYMMDD}-{HHMM}-{kebab-name}，例如 20260822-1430-ratio-sweep-seed0（**示例，非真实运行记录**）。目录名与 run_id 保持一致。名字里写清实验意图（而不是 run1/run2），这样 ls results/ 就能读懂实验历史。",
+      "examples": ["20260822-1430-ratio-sweep-seed0", "20260901-0905-static-sweep-seed1"]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "启动时刻，ISO 8601 带时区（如 2026-08-22T14:30:00+08:00）。云端机器时区常是 UTC，务必带 offset，否则跨机器比对时间线会错位。",
+      "examples": ["2026-08-22T14:30:00+08:00"]
+    },
+    "config": {
+      "type": "object",
+      "description": "已解析（resolved）的完整配置快照 —— 是默认值+配置文件+CLI 覆盖合并之后的最终值，而不是只记录被显式传的那几个参数。写原始输入等于没写：三个月后没人知道当时的默认值是什么。",
+      "additionalProperties": true
+    },
+    "git_commit": {
+      "type": ["string", "null"],
+      "minLength": 7,
+      "description": "代码版本。用 `git rev-parse HEAD` 的完整 40 位 hash；若工作区有未提交修改，在 note 里注明 dirty。⚠️ 本项目尚未 `git init` 时写 null —— **不要为了填满字段而编造 hash**，那会把「不可追溯」伪装成「可追溯」，比留空危险得多。"
+    },
+    "seed": {
+      "type": ["array", "integer", "null"],
+      "items": { "type": "integer" },
+      "description": "随机种子。多 seed 重复实验写数组（如 [0,1,2]），单次运行写整数，完全不涉及随机性时写 null。显式写 null 与『忘了填』在语义上不同，故 null 是合法值而字段本身仍是必填。",
+      "examples": [[0, 1, 2], 42, null]
+    },
+    "note": {
+      "type": "string",
+      "description": "一句话说明这次运行的意图或异常（如『hard→easy 的全因子第 3 格』『中途手动 kill，只跑了 40ep』）。这段是人类读实验历史时最有价值的一行；没有异常就写实验目的，不要留空串。",
+      "minLength": 1
+    },
+    "duration_sec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "实际耗时（秒）。用于以后估算同类实验的排队/预算，别用『大概两小时』。"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "自由标签，便于跨实验检索与聚合。约定用 kebab-case，如 [\"ablation\", \"full-factorial\", \"cloud\"]。"
+    },
+    "host": {
+      "type": "string",
+      "description": "运行环境标识（机器名 / 集群 / 云实例规格）。同一实验在本地与云端结果不一致时，这是第一排查线索。",
+      "examples": ["<云实例规格>", "<本地机器标识>"]
+    },
+    "dataset": {
+      "type": "string",
+      "description": "数据集标识，含切分与预处理口径（如 \"<数据集>:<窗口长度>:<切分方式>\"）。只写数据集名不足以复现——切分方式会显著改变结论。"
+    },
+    "metrics_summary": {
+      "type": "object",
+      "description": "关键指标的标量汇总（name → number），如「val_mse → 该次运行的最终验证 MSE」。只放结论性数字：完整逐 epoch 曲线属于指标 CSV，不塞进这里。",
+      "additionalProperties": { "type": "number" }
+    }
+  }
+}

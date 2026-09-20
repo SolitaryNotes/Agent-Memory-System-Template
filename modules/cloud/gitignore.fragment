@@ -1,0 +1,35 @@
+# ---- 云端实验 ----
+# 设计原则：**zip 与归档 README 入库**（可追溯凭据，体积可控）；
+#           **解压目录、模型权重、运行日志不入库**（体积大，且可由 zip 完整复现）。
+
+# 打包暂存区：代码/数据副本每次打包前重建 → 忽略；
+# 但四份核心文档与矩阵 CSV 要入库（它们是**手写的**，不是复制来的）
+cloud/package/*
+!cloud/package/*.md
+!cloud/package/*.csv
+!cloud/package/requirements.txt
+!cloud/package/.gitkeep
+
+# 返回包解压目录：只保留凭据类文件（manifest / 云端说明），其余忽略
+# 注意：必须先排除目录内容再反转包含，直接排除目录本身会导致反转无效
+# （核查脚本不在这里：它是常驻的 cloud/verify_integrity.py，也不随返回包回传）
+cloud/archive/**/return_package_*/*
+!cloud/archive/**/return_package_*/manifest.json
+!cloud/archive/**/return_package_*/CLOUD_AGENT_NOTE.md
+
+# 模型权重：体积大，一律不进仓库（zip 已归档）
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# 云端运行时状态与日志
+cloud/**/dashboard_state.json
+cloud/**/dashboard_state.json.tmp
+cloud/**/*.log
+cloud/**/nohup.out
+cloud/**/screenlog.*
+
+# 归档 zip 默认**保留**（它是这次实验唯一的原始凭据）。
+# 若仓库体积敏感，取消下一行注释，改为只留 README + manifest：
+# cloud/archive/**/*.zip

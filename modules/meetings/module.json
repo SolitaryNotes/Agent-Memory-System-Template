@@ -1,0 +1,6 @@
+{
+  "name": "meetings",
+  "target_prefix": "meetings",
+  "description": "组会记录与论文笔记模板（结构转录式论文笔记 + 带行动项的组会记录）",
+  "requires": []
+}

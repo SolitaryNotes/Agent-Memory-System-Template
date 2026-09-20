@@ -1,0 +1,157 @@
+"""Plot 公共前置模块 — 消除每个绘图脚本里复制粘贴的样板代码。
+
+原本每个脚本都要抄一遍 ``sys.path.insert(0, ...)``、``matplotlib.use("Agg")``、
+rcParams 字体三连、``os.makedirs(OUTPUT_DIR)``；现在一次导入即可。脚本位于
+``experiments/plot/{tier}/{NN}-{name}.py``，典型用法::
+
+    from common import setup_matplotlib, load_history, figure_dir, save_fig
+    plt = setup_matplotlib()
+    hist = load_history("<实验名>/<格>/<run_id>/history.json")   # 相对路径按 results/ 解析
+    fig, ax = plt.subplots()
+    # history.json 的字段名由项目自定义；这里用 epoch / val_loss 举例
+    ax.plot([h["epoch"] for h in hist], [h["val_loss"] for h in hist])
+    save_fig(fig, "loss_curve", figure_dir())       # → figures/<tier>/<NN>-<name>/
+
+导入本模块会把仓库根加入 ``sys.path``，故项目根下的包（`models`、`data` 之类——**举例，
+本项目不一定有**）随后可直接 import。
+"""
+from __future__ import annotations
+
+import csv
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+TIERS, _FORMATS = ("exploratory", "curated"), ("png", "pdf")
+
+
+def repo_root() -> Path:
+    """仓库根 = 最近的 ``experiments/plot/`` 标记的父目录。
+
+    用标记向上搜索而非硬编码层数，plot 目录整体迁移时不会悄悄失效。
+    """
+    for parent in Path(__file__).resolve().parents:
+        if parent.name == "experiments" and (parent / "plot").is_dir():
+            return parent.parent
+    raise RuntimeError("repo_root: 未找到 experiments/plot/ 标记，无法确定仓库根")
+
+
+ROOT = repo_root()
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+RESULTS_DIR, FIGURES_DIR = ROOT / "results", ROOT / "figures"
+
+
+def setup_matplotlib(font: str | None = None, *, size: int = 10) -> Any:
+    """切非交互后端 + 配置字体/分辨率，返回 ``matplotlib.pyplot``。
+
+    ``font`` 放在首位（如 "Times New Roman"），CJK 字体兜底，中英混排不出豆腐块。
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    sans = ([font] if font else []) + ["DejaVu Sans", "Arial", "Microsoft YaHei", "SimHei"]
+    plt.rcParams.update({
+        "font.family": "sans-serif", "font.sans-serif": sans, "font.size": size,
+        "axes.unicode_minus": False, "figure.dpi": 150, "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+    })
+    return plt
+
+
+def _resolve(path: str | Path) -> Path:
+    """相对路径按 ``results/`` 解析；绝对路径原样返回。"""
+    p = Path(path)
+    return p if p.is_absolute() else RESULTS_DIR / p
+
+
+def load_json(path: str | Path, default: Any = None) -> Any:
+    """读 JSON；文件缺失时返回 ``default``（传 None 则抛 FileNotFoundError）。"""
+    p = _resolve(path)
+    if not p.exists():
+        if default is not None:
+            return default
+        raise FileNotFoundError(p)
+    with p.open(encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def load_history(path: str | Path) -> list:
+    """读训练历史为 ``[{epoch, ...}, ...]``。
+
+    兼容 JSON 列表、``{"history": [...]}`` 这类 JSON 对象、以及带表头的 CSV。
+    """
+    p = _resolve(path)
+    if p.suffix.lower() == ".csv":
+        with p.open(encoding="utf-8", newline="") as fh:
+            return [{k: _num(v) for k, v in row.items()} for row in csv.DictReader(fh)]
+    data = load_json(p)
+    if isinstance(data, dict):
+        for key in ("history", "epochs", "records", "log"):
+            if isinstance(data.get(key), list):
+                return data[key]
+        raise ValueError(f"load_history: {p} 是 dict 但找不到历史列表字段")
+    return data
+
+
+def _num(value: Any) -> Any:
+    """CSV 单元格转数：能转则转，转不了保留原字符串。"""
+    for cast in (int, float):
+        try:
+            return cast(value)
+        except (TypeError, ValueError):
+            pass
+    return value
+
+
+def _caller_script() -> Path | None:
+    """调用方脚本路径。脚本总是直接运行，故 ``sys.argv[0]`` 即是它。"""
+    argv0 = sys.argv[0] if sys.argv else ""
+    if not argv0 or argv0.startswith("-"):  # python -c / 交互式
+        return None
+    try:
+        p = Path(argv0).resolve()
+    except OSError:
+        return None
+    return p if p.exists() and p.suffix == ".py" else None
+
+
+def figure_dir(tier: str = "exploratory", name: str | None = None,
+               caller: str | Path | None = None) -> Path:
+    """返回并创建图目录，同时校验**镜像规则**：脚本与图目录一一对应。
+
+    ``experiments/plot/{tier}/{name}.py`` → ``figures/{tier}/{name}/``
+    ``name`` 默认取自调用方脚本文件名，所以目录名不会与脚本名漂移。
+    """
+    if tier not in TIERS:
+        raise ValueError(f"figure_dir: tier 必须是 {TIERS} 之一，收到 {tier!r}")
+    script = Path(caller) if caller else _caller_script()
+    same_tier = script is not None and script.parent.name in TIERS
+    if same_tier and script.parent.name != tier:
+        raise ValueError(f"镜像规则冲突: 脚本在 {script.parent.name}/ 却写 {tier}/ 的图目录"
+                         "；提升为 curated 时须同时移动脚本与图目录。")
+    if name is None:
+        name = script.stem if script else "unnamed"
+    elif same_tier and script.stem != name:
+        raise ValueError(f"镜像规则冲突: 脚本名 {script.stem!r} ≠ 图目录名 {name!r}")
+    out = FIGURES_DIR / tier / name
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def save_fig(fig: Any, name: str, outdir: str | Path | None = None,
+             *, formats: tuple = _FORMATS, close: bool = True) -> list:
+    """把图同时写成 PNG（预览）与 PDF（论文矢量），返回写出的路径列表。"""
+    out = Path(outdir) if outdir else figure_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    written = [out / f"{name}.{ext}" for ext in formats]
+    for path in written:
+        fig.savefig(path, format=path.suffix.lstrip("."))
+    if close:
+        import matplotlib.pyplot as plt
+
+        plt.close(fig)
+    return written

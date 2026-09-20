@@ -1,0 +1,6 @@
+{
+  "name": "hooks",
+  "target_prefix": "hooks",
+  "description": "可选的 Claude Code SessionStart hook：把启动序列从文字约定变成机制（默认不启用）",
+  "requires": []
+}

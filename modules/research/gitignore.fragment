@@ -1,0 +1,28 @@
+# ---- 科研实验产物分层 ----
+# 原则：**可重建的不入库，说不清来源的不入库**。
+
+# 权重与训练中间产物：体积大、可由配置+代码重建
+results/**/*.ckpt
+results/**/*.pt
+results/**/*.pth
+results/**/*.tmp
+results/**/.ipynb_checkpoints/
+
+# 日志：保留（它是失败 run 的唯一现场），只忽略逐 epoch 的 verbose 日志
+results/**/*verbose.log
+
+# 图分层：exploratory 是 Agent 中间产物（不入库），curated 是人工定稿（入库）
+# 只忽略 figures/exploratory/，**不**忽略 figures/ 整目录，因此 curated 默认被跟踪，
+# 无需额外的 `!` 规则。注意：experiments/plot/**/*.py 仍然入库——
+# 脚本是可复现的资产，被丢弃的只是它的输出图。
+figures/exploratory/
+
+# 数据集：体积大或有访问限制
+# ⚠️ gitignore 陷阱：git **无法**重新包含「父目录已被排除」的文件。
+# 所以这里写 `dataset/*`（排除内容）而不是 `dataset/`（排除目录本身）——
+# 后者会让下面的 `!` 全部失效，且失效得很安静。
+# **本项目不打算用 `dataset/` 就把这四行整块删掉**：留着它，`!dataset/README.md`
+# 会让人反推出"这里本该有个 dataset 目录"——一条实际并不存在的目录约定。
+dataset/*
+!dataset/README.md
+!dataset/*.sha256

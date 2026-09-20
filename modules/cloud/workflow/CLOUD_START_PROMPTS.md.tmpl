@@ -1,0 +1,72 @@
+# 云端 Agent 启动 Prompt 集（{{PROJECT_NAME}}，复制即用）
+
+> **用法**：把 zip 上传云端并解压（`unzip X.zip && cd cloud_package`）后，把对应 Prompt **原样**交给
+> 云端 Agent，它会读 `CLOUD_AGENTS.md` 自启动。
+> **完整流程**见 [`../docs/cloud_coordination.md`](../docs/cloud_coordination.md)；归档规则见
+> [`../archive/README.md`](../archive/README.md)（= `cloud/archive/README.md`）。
+>
+> **本文件是只追加（append-only）的登记表。**
+> **每次新实验：在文件末尾追加一段新 Prompt，不要修改历史段落。**
+> 理由：Prompt 是这次实验**约束条件**的书面记录——包括当时是"要求单机一致"还是"不要求"。
+> 事后修改会让归档里的文字与当时实际发出的指令不一致，追溯就断了。
+
+---
+
+## 目录
+
+| # | 实验 | 上传包 | 日期 | 状态 |
+|---|------|--------|------|------|
+| §1 | 通用模板（新实验起手） | — | — | 模板 |
+| [TODO: §2 起，每次实验追加一行，指向下方的 Prompt 段] | | | | |
+
+> 已执行完毕的实验，其 zip 已按日期归档到 `cloud/archive/{日期}/{实验名}/`。表格行保留，便于从 Prompt 反查归档。
+
+---
+
+## §1. 通用模板（新实验起手，替换 `<...>` 与 `[TODO: ...]`）
+
+```
+你是"{{PROJECT_NAME}} · [TODO: 实验名]"的云端实验 Agent。先读压缩包根目录的 CLOUD_AGENTS.md
+（自启动协议，★必须第一个读），再依次读 RESEARCH_BACKGROUND.md、EXPERIMENT_PROTOCOL.md、
+RESULTS_SO_FAR.md，充分理解科研目的与协议。然后按协议执行（{{ENTRY_CMD}}）。
+执行期间必须做到【实时监督与展示】：(1) 实验脚本在关键节点写 dashboard_state.json 并 tee 每步日志；
+(2) 启动实时监督展示——形式（浏览器仪表盘/日志流/定期摘要）由你根据本次实验自行设计（可参考
+cloud/workflow/dashboard_template/），务必让我能实时看到宏观进度与详细日志，用 nohup 后台运行，
+并告诉我公网访问方式（AutoDL 自定义服务 URL 或 SSH 隧道命令）；(3) 定期用简洁中文向我简报进度
+（当前格子、已完成 mean±std、剩余预计时间），失败时如实说明并尽量修复。
+【按需保留】单机一致性：全部格子必须在同一实例同一会话内连续跑完，中途不得换机器；用 nohup/screen
+挂后台防止 SSH 断连。续跑按矩阵状态（已完成的格子标 done 后重跑剩余），不要从 checkpoint 恢复整个矩阵。
+【按需保留】重复次数：3 次为硬性默认；仅时间极端紧张才降为 2 次，并必须在 CLOUD_AGENT_NOTE.md 注明。
+严禁编造数字：所有汇报的数字必须从 results.csv / dashboard_state.json 读出，不得手写；
+跑挂的格子如实标 failed，不要填 0 或沿用上一次的值。
+全部完成后运行打包脚本生成返回包，务必把云端实际运行的脚本复制进 cloud_scripts/，
+并补全 CLOUD_AGENT_NOTE.md（GPU 型号、总运行时长、重复次数、单机一致性确认、全部 mean±std、任何异常），
+最后告知我返回包文件名。
+```
+
+---
+
+<!-- 新实验 Prompt 从下面开始追加，格式：
+
+---
+
+## §N. <实验名>（<实验简述>，<打包日期>）
+
+```
+<复制上面的通用模板，替换 <...> 与 [TODO: ...]，按需保留/删除【按需保留】段落>
+```
+
+-->
+
+---
+
+## 追加时的注意事项
+
+- **单机一致性**：只要矩阵内格子要互相比较，就必须在 Prompt 里明写「同一实例连续跑完，不得换机器」。
+  若本次**不要求**，也要明写「本次不要求单机一致性」——否则云端 Agent 会为了保险而无谓延长占用。
+- **实时监督**：形式由云端 Agent 自定（参考 `cloud/workflow/dashboard_template/`），
+  唯一硬性要求是**用户实时可见宏观进度 + 详细日志**。
+- **重复实验**：3 次为硬性默认；降为 2 次必须显式记录在 `CLOUD_AGENT_NOTE.md` 与归档 README。
+- **返回完整性**：返回包回来后，本地 Agent 按 `../docs/cloud_coordination.md` §12 核验
+  （**含 `cloud_scripts/` —— 云端改过的脚本必须回来**），确认无误后才答复用户可以关机。
+- **归档**：本次实验的 zip 与返回包按 `cloud/archive/README.md` 归入 `cloud/archive/{日期}/{实验名}/`。
