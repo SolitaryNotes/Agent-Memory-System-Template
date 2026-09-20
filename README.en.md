@@ -43,8 +43,16 @@ python tools/init.py --target DIR --dry-run            # see what would be writt
 ```
 
 `init.py` fills in what it can and leaves everything else as explicit `[TODO: ...]`
-markers, then prints the list. Open a fresh agent session and let it fill them in —
-that is the intended workflow, not a shortcoming.
+markers, then prints the list. Open a fresh agent session **inside the target project**
+and let it fill them in — that is the intended split, not a shortcoming.
+
+The reason is worth stating: `init.py` is mechanical (it needs no knowledge of the
+project it is landing in), while the routing table and invariants it leaves blank can
+only be written by something that has read the project. An agent filling them from the
+outside would be inventing them, and a plausible invention is worse than an honest blank.
+
+`init.py` skips existing files by default and only overwrites with `--force`, so it will
+not clobber anything already in the target.
 
 Afterwards:
 
