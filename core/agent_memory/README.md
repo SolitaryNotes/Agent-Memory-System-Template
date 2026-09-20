@@ -40,7 +40,10 @@ plans/ prompts/                   计划 / 一次性任务简报
 **命名约定**
 - session log：`session_YYYYMMDD_<slug>.md`（date 为会话主日期，非文件修改时间；slug 用 snake_case 描述**活动**）
 - plan：`YYYY-MM-DD-<kebab-slug>.md`
-- prompt：`YYYY-MM-DD-<kebab-slug>.md`
+- prompt：**两种**，靠有无日期区分
+  - `YYYY-MM-DD-<kebab-slug>.md` —— **一次性简报**：为某次具体任务写的，**发出去就不再修改**（要改就新写一份，让旧的留作决策痕迹）
+  - `<kebab-slug>.md`（无日期）—— **常驻可复用的启动指令**：每次都用的那种，会随项目演进而更新
+  > 区分这两者很重要：给一份"改了也没关系"的常驻指令套上日期，会让后人以为那是某天的存档而不敢动。
 - 专题文档：`<kebab-slug>.md`（放本目录下）
 
 ---
