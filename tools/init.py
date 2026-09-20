@@ -189,6 +189,32 @@ def uninstalled_module_paths(installed: list[str]) -> list[str]:
     return sorted(set(out))
 
 
+def check_target_safety(target: Path) -> str | None:
+    """落地目标的安全检查。通过则返回 None，否则返回拒绝理由。
+
+    **为什么这道守卫要放在脚本里，而不是只写在 Prompt 的「暂停条件」里**：
+    Prompt 是会被绕过的——直接敲 `init.py` 就看不到它。放进脚本本身，
+    command / Prompt / 手敲命令三条路径才受同一道守卫。
+    （与本项目一贯做法一致：能钉死在机制里的，不留给流程自觉。）
+
+    刻意**不**拦的情况：目标目录不存在（那就新建）、目标是某个已有项目
+    （文件已存在时默认跳过，不会覆盖）。
+    """
+    repo_root = TEMPLATE_ROOT.parent
+    if target == repo_root:
+        return f"目标是模板仓库自身（{repo_root}）——那会把模板与项目混在一起"
+    if target == TEMPLATE_ROOT or TEMPLATE_ROOT in target.parents:
+        return f"目标在 {TEMPLATE_ROOT.name}/ 内部——那是模板的源，不是落地位置"
+    if target == target.parent:
+        return f"目标是磁盘根目录（{target}）——不像是一个项目"
+    try:
+        if target == Path.home():
+            return f"目标是用户主目录（{target}）——不像是一个项目"
+    except RuntimeError:
+        pass
+    return None
+
+
 def plan_files(modules: list[str]) -> tuple[list[tuple[Path, Path]], list[str]]:
     """返回 (源文件, 目标相对路径) 列表，以及未知模块名列表。"""
     plan: list[tuple[Path, Path]] = []
@@ -283,6 +309,14 @@ def main() -> int:
     args = ap.parse_args()
 
     target = Path(args.target).resolve()
+
+    # 守卫在**任何写入之前**跑，`--dry-run` 也照跑——让危险目标在预演阶段就暴露
+    refusal = check_target_safety(target)
+    if refusal:
+        print(f"❌ 拒绝落地：{refusal}", file=sys.stderr)
+        print("   这是安全守卫，不是权限问题；换一个目标目录即可。", file=sys.stderr)
+        return 2
+
     modules = [m.strip() for m in args.modules.split(",") if m.strip()]
 
     if args.name is None:
