@@ -235,12 +235,16 @@ def _is_build_artifact(p: Path) -> bool:
     return bool(BUILD_ARTIFACT_DIRS & set(p.parts)) or p.suffix.lower() in BUILD_ARTIFACT_SUFFIXES
 
 
+# 这些文件在模板里**不带前导点**——带了的话，它们会在模板仓库内部就被 git 当作配置读取，
+# 作用于 `template/` 子树。落地时才还原成点开头的正式名字。
+DOTFILE_RENAME = {"gitignore": ".gitignore", "gitattributes": ".gitattributes"}
+
+
 def _strip_tmpl(rel: Path) -> Path:
     if rel.suffix == ".tmpl":
         rel = rel.with_suffix("")
-    # 模板里叫 gitignore（避免在模板仓库里被 git 当配置读取），落地时还原成 .gitignore
-    if rel.name == "gitignore":
-        rel = rel.with_name(".gitignore")
+    if rel.name in DOTFILE_RENAME:
+        rel = rel.with_name(DOTFILE_RENAME[rel.name])
     return rel
 
 

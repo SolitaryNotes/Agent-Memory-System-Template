@@ -1,0 +1,25 @@
+# 行尾统一为 LF。
+#
+# 为什么落地项目需要这一条：Git for Windows 的默认 `core.autocrlf=true` 会在
+# checkout 时把 LF 写成 CRLF，于是**同一个项目在 Windows 上是 CRLF、在 Linux 上是 LF**。
+# 字节不一致本身很少直接坏事，但它会让跨平台协作时的 diff 出现假改动，
+# 也让「这份文件我验证过」这句话失去前提——你验证的那份和别人拿到的那份不是同一串字节。
+#
+# 本模板不含任何需要 CRLF 的文件类型（无 .sh / .bat / .cmd / .ps1），
+# 所以强制 LF 的代价接近零。若你的项目确实有需要 CRLF 的文件，在下面单独豁免即可，例如：
+#     *.bat text eol=crlf
+#     *.ps1 text eol=crlf
+* text=auto eol=lf
+
+# 二进制文件不参与行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.ico binary
+*.zip binary
+*.pth binary
+*.pt binary
+*.ckpt binary
+*.safetensors binary

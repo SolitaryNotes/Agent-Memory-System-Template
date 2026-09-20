@@ -1,5 +1,7 @@
 # Agent Memory System — 可复用的 Agent 记忆系统模板
 
+> **English?** → [`README.en.md`](README.en.md)（英文入口页；文档主体仍为中文，理由见该页的 Language 一节）
+
 > 让任何一个新项目里的 Agent，**不需要你重新交代一遍上下文**，就能知道：
 > 这是什么项目、现在在哪一步、该改哪个文件、上次做到哪了。
 
