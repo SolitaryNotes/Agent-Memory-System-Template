@@ -1,0 +1,21 @@
+# 行尾统一为 LF。
+#
+# 这一份是**模板仓库自身**的；落地项目用的那份在 `core/gitattributes.tmpl`
+# （`init.py` 落地时把它改名成项目根的 `.gitattributes`）。
+# 详细的理由与"如何豁免某个文件"写在那边，此处不重复——本项目不重复写同一份内容。
+#
+# 为什么模板仓库**也**需要这一条：
+# `tools/init.py` 是**从工作区复制**文件的。若有人克隆本仓库、在 Windows 上
+# 被 `core.autocrlf` 转成 CRLF，再从他那个克隆跑 `init.py`，
+# **新项目拿到的就是 CRLF**——恰好是本模板本想消除的那个问题。
+# 缺了这一环，闭环就不成立。
+* text=auto eol=lf
+
+# 二进制文件不参与行尾转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.ico binary
+*.zip binary
